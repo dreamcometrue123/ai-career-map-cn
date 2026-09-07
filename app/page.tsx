@@ -53,6 +53,7 @@ export default function Home() {
   const submitRef = useRef<HTMLButtonElement>(null);
   const processRef = useRef<HTMLDivElement>(null);
   const [resultVersion, setResultVersion] = useState(0);
+  const [resetNotice, setResetNotice] = useState("");
   useEffect(() => () => { matchingTimers.current.forEach(clearTimeout); }, []);
   useEffect(() => {
     if (matchingPhase === 0) processRef.current?.focus({preventScroll:true});
@@ -102,9 +103,11 @@ export default function Home() {
   };
   const completeAssessment = () => {
     if (matchingActive.current) return;
+    setResetNotice("");
     matchingActive.current = true;
     const snapshot = {...assessment, abilities:[...assessment.abilities], preferences:[...assessment.preferences]};
     const finish = () => {
+      if (!matchingActive.current) return;
       setSubmittedAssessment(snapshot);
       setMatchingPhase(null);
       setResultVersion(v => v + 1);
@@ -123,6 +126,22 @@ export default function Home() {
     const success = writeSaved(saved.includes(id) ? saved.filter(item => item !== id) : [...saved,id]);
     setStorageNotice(success ? '' : '浏览器未允许保存收藏，本次可用，刷新后可能丢失。');
   };
+  const resetMatching = () => {
+    matchingTimers.current.forEach(clearTimeout);
+    matchingTimers.current = [];
+    matchingActive.current = false;
+    setMatchingPhase(null);
+    setSubmittedAssessment(null);
+    setResultVersion(0);
+    setAssessment({...emptyAssessment, abilities:[], preferences:[]});
+    setJobPreferences({...emptyJobPreferences});
+    setStep(1);
+    setResetNotice("已清空，可以填写新的职业背景。收藏已保留。");
+    requestAnimationFrame(() => {
+      document.querySelector<HTMLInputElement>(".assessment-step input")?.focus({preventScroll:true});
+      document.getElementById("top")?.scrollIntoView({behavior:reduceMotion() ? "instant" : "smooth"});
+    });
+  };
 
   return <main className="app-frame">
     <header className="app-header">
@@ -134,6 +153,8 @@ export default function Home() {
       <h1>你的能力，<br />通往 <em>AI 新职业</em></h1>
       <div className="hero-facts"><span><b>{roles.length}</b> 岗位方向</span><span><b>{categories.length-1}</b> 职业类别</span><a href="#roles">探索岗位库 <ArrowRight size={14}/></a></div>
       <div className="assessment-card">
+        <div className="reset-toolbar"><span>换个职业，再探索一次</span><button type="button" onClick={resetMatching}>清空重填</button></div>
+        <p className="reset-notice" role="status">{resetNotice}</p>
         <div hidden={matchingPhase !== null}>
         <div className="assessment-progress"><span>0{step} / 03 · {["职业背景", "能力画像", "转型偏好"][step-1]}</span><div aria-label={`第${step}步，共3步`}>{[1,2,3].map((item) => <i key={item} className={item <= step ? "done" : ""} />)}</div></div>
         {step === 1 && <div className="assessment-step"><h2>你的职业背景</h2><p>职位与年限用于方向探索；行业仅作背景记录，不参与排序。</p>
