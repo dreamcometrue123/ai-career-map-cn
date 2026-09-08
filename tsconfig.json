@@ -1,4 +1,4 @@
 {
   "compilerOptions": {"target":"ES2022","lib":["ES2022","DOM","DOM.Iterable"],"strict":true,"skipLibCheck":true,"module":"ESNext","moduleResolution":"bundler","jsx":"react-jsx","noEmit":true,"esModuleInterop":true},
-  "include":["app","main.tsx","vite.config.ts"]
+  "include":["app","main.tsx","market.tsx","vite.config.ts"]
 }
